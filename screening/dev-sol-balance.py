@@ -7,6 +7,8 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import remove_address_from_potential, add_address_to_blacklist
+from pumpfundev import getpumpfundevwallet
+
 
 def main(base_token_address):
 
@@ -37,9 +39,13 @@ def main(base_token_address):
             return
         
         if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
-            #print(f"Dev wallet {dev_address} detected. Exiting without further checks.")
-            # Do extra logic in here for pumpfun coins
-            sys.exit(0)
+            dev_address = getpumpfundevwallet(base_token_address)
+            if dev_address == "":
+                print("Error getting dev address")
+                remove_address_from_potential(base_token_address)
+                add_address_to_blacklist(base_token_address)
+                sys.exit(0)
+            
 
         url = f"https://api.solscan.io/v2/account?address={dev_address}"
         headers = {

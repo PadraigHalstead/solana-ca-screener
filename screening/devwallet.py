@@ -7,6 +7,7 @@ load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import save_addresses_to_csv, load_addresses_from_csv, add_address_to_blacklist, remove_address_from_potential
+from pumpfundev import getpumpfundevwallet
 
 def call_solscan_api(dev_address, base_token_address):
 
@@ -51,6 +52,7 @@ def main():
         sys.exit(1)
 
     base_token_address = sys.argv[1]
+    pumpfun = 0
 
     with open('./extracted_data.json', 'r') as file:
         extracted_data = json.load(file)
@@ -63,12 +65,18 @@ def main():
 
         if not dev_address or token_supply is None:
             print("Required data missing in the extracted data")
+            remove_address_from_potential(base_token_address)
+            add_address_to_blacklist(base_token_address)
             sys.exit(1)
 
         if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
-            #extra logic
-            #top holders - look through top 20 for "devwallet" - set as new dev wallet
-            sys.exit(0)
+            dev_address = getpumpfundevwallet(base_token_address)
+            if dev_address == "":
+                print("Error getting dev address")
+                remove_address_from_potential(base_token_address)
+                add_address_to_blacklist(base_token_address)
+                sys.exit(0)
+            pumpfun = 1
 
         response = call_solscan_api(dev_address, base_token_address)
 
@@ -77,7 +85,13 @@ def main():
             response_data = json.loads(content)
 
             if response_data.get('data', {}).get('count', 0) == 0:
-                print("No tokens")
+                if pumpfun == 1:
+                    print("Pump fun token: Dev sold. Blacklisting")
+                    remove_address_from_potential(base_token_address)
+                    add_address_to_blacklist(base_token_address)
+                    sys.exit(0)
+                else:
+                    print("No tokens")
                 return
 
             tokens = response_data.get('data', {}).get('tokens', [])
