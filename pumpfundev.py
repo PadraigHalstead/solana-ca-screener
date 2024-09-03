@@ -54,9 +54,9 @@ def getpumpfundevwallet(base_token_address):
     transfers = response.json()
 
     devwallet = None
-    for transfer in transfers:
-        if transfer.get('action') == 'pay_tx_fees':
-            devwallet = transfer.get('source')
+    for entry in transfers['result']['data']:
+        if entry.get('action') == 'pay_tx_fees':
+            devwallet = entry.get('source')
             break
     
     if devwallet:
