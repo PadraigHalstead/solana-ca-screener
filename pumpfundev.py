@@ -3,31 +3,25 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-def getpumpfundevwallet(base_token_address):
-     
-    solscan_cookie = os.getenv('SOLSCAN_COOKIE')
-    sol_aut = os.getenv('SOL_AUT')
-    api_key = os.getenv('SOLANA_FM_API_KEY')
+from config import solscan_cookie, ua_platform, user_agent, api_key
 
-    
+def getpumpfundevwallet(base_token_address):
     url = f"https://api-v2.solscan.io/v2/account?address={base_token_address}"
     headers = {
-        "accept": "application/json, text/plain, */*",
-        "accept-encoding": "gzip, deflate, br, zstd",
-        "accept-language": "en-US,en;q=0.9",
-        "cookie": solscan_cookie,
-        "if-none-match": 'W/"bc9-NHG88bcSKuuMBPl02DHyHuDhYL0"',
-        "origin": "https://solscan.io",
-        "priority": "u=1, i",
-        "referer": "https://solscan.io/",
-        "sec-ch-ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "sol-aut": sol_aut,
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cookie": solscan_cookie, 
+        "Origin": "https://solscan.io",
+        "Referer": "https://solscan.io/",
+        "Sec-Ch-Ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": ua_platform,
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "User-Agent": user_agent,
+        "Priority": "u=1, i"
     }
 
     response = requests.get(url, headers=headers)
@@ -43,7 +37,7 @@ def getpumpfundevwallet(base_token_address):
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "User-Agent": user_agent,
         "ApiKey": api_key
     } 
     response = requests.get(url, headers)
