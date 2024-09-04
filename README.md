@@ -20,11 +20,7 @@ Currently supports:
 git clone https://github.com/PadraigHalstead/solana-ca-screener.git
 ```
 
-2. Install dependencies
-
-```
-
-```
+2. Install dependencies from `requirements.txt`
 
 3. Configure enviornment variables
 
