@@ -9,23 +9,10 @@ load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import save_addresses_to_csv, load_addresses_from_csv, append_to_csv, replace_top_holders, remove_address_from_potential, add_address_to_blacklist
+from config import solscan_cookie, user_agent, ua_platform
 
 
 def call_solscan_api(ca):
-
-    solscan_cookie = os.getenv('SOLSCAN_COOKIE')
-    if not solscan_cookie:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOLSCAN_COOKIE to the .env file")
-    
-    sol_aut = os.getenv('SOL_AUT')
-    if not sol_aut:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOL_AUT to the .env file")
-    
-
     url = f"https://api.solscan.io/v2/token/holders?token={ca}&offset=0&size=20"
     headers = {
         "Accept": "application/json, text/plain, */*",
@@ -36,14 +23,12 @@ def call_solscan_api(ca):
         "Referer": "https://solscan.io/",
         "Sec-Ch-Ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
         "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Ch-Ua-Platform": ua_platform,
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-        "If-None-Match": 'W/"74d-DCjguB6W0/wh9+0yQrGQlnuc2fg"',
-        "Priority": "u=1, i",
-        "Sol-Aut": sol_aut
+        "User-Agent": user_agent,
+        "Priority": "u=1, i"
     }
 
     response = requests.get(url, headers=headers)
@@ -51,6 +36,8 @@ def call_solscan_api(ca):
         return response.json()
     else:
         print(f"Failed to fetch data for {ca}. Status code: {response.status_code}")
+        add_address_to_blacklist(base_token_address)
+        remove_address_from_potential(base_token_address)
         return None
 
 def read_json(file_path):

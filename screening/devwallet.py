@@ -8,41 +8,27 @@ load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import save_addresses_to_csv, load_addresses_from_csv, add_address_to_blacklist, remove_address_from_potential
 from pumpfundev import getpumpfundevwallet
+from config import solscan_cookie, ua_platform, user_agent
 
-def call_solscan_api(dev_address, base_token_address):
-
-    solscan_cookie = os.getenv('SOLSCAN_COOKIE')
-    if not solscan_cookie:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOLSCAN_COOKIE to the .env file")
-    
-    sol_aut = os.getenv('SOL_AUT')
-    if not sol_aut:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOL_AUT to the .env file")
-    
-    
-    url = f"https://api.solscan.io/v2/account/v2/tokens?address={dev_address}"
+def call_solscan_api(dev_address):
+    url = f'https://api-v2.solscan.io/v2/account/tokenaccounts?address={dev_address}&page=1&page_size=480&type=token&hide_zero=true'
     headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
-        "Cookie": solscan_cookie,
-        "Origin": "https://solscan.io",
-        "Priority": "u=1, i",
-        "Referer": "https://solscan.io/",
-        "Sec-Ch-Ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Linux"',
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-        "Sol-Aut": sol_aut,
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+        "accept": "application/json, text/plain, */*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9",
+        "cookie": solscan_cookie,
+        "origin": "https://solscan.io",
+        "priority": "u=1, i",
+        "referer": "https://solscan.io/",
+        "sec-ch-ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": ua_platform,
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "user-agent": user_agent
     }
-    
+
     response = requests.get(url, headers=headers)
     return response
 
@@ -69,6 +55,7 @@ def main():
             add_address_to_blacklist(base_token_address)
             sys.exit(1)
 
+        # Pump.fun wallet address
         if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
             dev_address = getpumpfundevwallet(base_token_address)
             if dev_address == "":
@@ -78,27 +65,15 @@ def main():
                 sys.exit(0)
             pumpfun = 1
 
-        response = call_solscan_api(dev_address, base_token_address)
+        response = call_solscan_api(dev_address)
 
         try:
-            content = response.text
-            response_data = json.loads(content)
-
-            if response_data.get('data', {}).get('count', 0) == 0:
-                if pumpfun == 1:
-                    print("Pump fun token: Dev sold. Blacklisting")
-                    remove_address_from_potential(base_token_address)
-                    add_address_to_blacklist(base_token_address)
-                    sys.exit(0)
-                else:
-                    print("No tokens")
-                return
-
-            tokens = response_data.get('data', {}).get('tokens', [])
+            response_data = response.json()
+            token_accounts = response_data.get('data', {}).get('tokenAccounts', [])
             amount = None
-            for token in tokens:
-                if token.get('tokenAddress') == base_token_address:
-                    amount = token.get('amount')
+            for account in token_accounts:
+                if account.get('tokenAddress') == base_token_address:
+                    amount = account.get('balance')
                     break
 
             if amount is not None:
@@ -114,6 +89,11 @@ def main():
                     save_addresses_to_csv(potential_addresses)
                     save_addresses_to_csv(blacklist_addresses)
                     print(f"Blacklisted: {base_token_address}.")
+            else:
+                print(f"Token address {base_token_address} not found in dev wallet")
+                if pumpfun == 1:
+                    remove_address_from_potential(base_token_address)
+                    add_address_to_blacklist(base_token_address)
 
         except ValueError as e:
             print("Failed to calculate dev %")

@@ -1,7 +1,6 @@
 import time
 import subprocess
 import csv
-import platform
 import os
 import sys
 import logging
@@ -10,12 +9,7 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import remove_address_from_potential, add_address_to_gems
-
-def get_python_executable():
-    if platform.system() == 'Linux':
-        return '/usr/bin/python3'
-    else:
-        return 'python'
+from config import python_executable, allow_pumpfun, solscan_cookie, api_key
 
 def ensure_file_exists(file_path):
     try:
@@ -54,7 +48,7 @@ def screen():
                 if is_blacklisted(base_token_address):
                     continue
 
-                if not (pumpfun): 
+                if not (allow_pumpfun): 
                     subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "pump-fun-check.py")), base_token_address])
                     if is_blacklisted(base_token_address):
                         print(f"Pump.fun launch. Blacklisting")
@@ -104,10 +98,12 @@ def screen():
 
         time.sleep(0.1)
 
-if __name__ == "__main__":
-    python_executable = get_python_executable()
-    pumpfun = os.getenv('ALLOW_PUMP_FUN', 'false').lower() == 'true'
-    if not pumpfun:
-        raise Exception("Pump.fun configuration not found. Please add ALLOW_PUMP_FUN to the .env file")
+if __name__ == "__main__": 
+    if allow_pumpfun == "":
+        raise Exception("Pump.fun configuration not found. Please add ALLOW_PUMP_FUN to your .env file")
+    if not solscan_cookie:
+        raise Exception("Solscan cookie not found. Please add SOLSCAN_COOKIE to your .env file")
+    if not api_key:
+        raise Exception("API key not found. Please add SOLANA_FM_API_KEY to your .env file")
     screen()
 

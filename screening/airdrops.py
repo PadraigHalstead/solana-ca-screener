@@ -7,20 +7,14 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import add_address_to_blacklist, remove_address_from_potential
+from config import api_key, user_agent
 
 def get_transfer_details(dev_address, ca):
-    api_key = os.getenv('SOLANA_FM_API_KEY')
-    if not api_key:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOLANA_FM_API_KEY to the .env file")
-
-
     url = f"https://api.solana.fm/v0/accounts/{dev_address}/transfers?mint={ca}&page=1"
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "User-Agent": user_agent,
         "ApiKey": api_key
     }
 

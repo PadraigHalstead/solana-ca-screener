@@ -12,6 +12,7 @@ def check_pumpfun(base_token_address):
     
     if response.status_code == 200:
         if response.text != "[]":
+            print(f"pump.fun launch. Blacklisting")
             add_address_to_blacklist(base_token_address)
             remove_address_from_potential(base_token_address)
     else:

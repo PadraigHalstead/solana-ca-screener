@@ -6,39 +6,25 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import remove_address_from_potential, add_address_to_blacklist
+from config import solscan_cookie, ua_platform, user_agent
 
-def main(base_token_address):
-
-    solscan_cookie = os.getenv('SOLSCAN_COOKIE')
-    if not solscan_cookie:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOLSCAN_COOKIE to the .env file")
-    
-    sol_aut = os.getenv('SOL_AUT')
-    if not sol_aut:
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-        raise Exception("API key not found. Please add your SOL_AUT to the .env file")
-    
+def main(base_token_address):  
     url = f"https://api.solscan.io/v2/token/holders?token={base_token_address}&offset=0&size=1"
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
         "Accept-Language": "en-US,en;q=0.9",
-        "Cookie": solscan_cookie,
-        "If-None-Match": 'W/"74d-zOuTCYGR/0cByRr2/qCIiJs/h/o"',
+        "Cookie": solscan_cookie, 
         "Origin": "https://solscan.io",
-        "Priority": "u=1, i",
         "Referer": "https://solscan.io/",
         "Sec-Ch-Ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
         "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Ch-Ua-Platform": ua_platform,
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site",
-        "Sol-Aut": sol_aut,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+        "User-Agent": user_agent,
+        "Priority": "u=1, i"
     }
 
     try:
