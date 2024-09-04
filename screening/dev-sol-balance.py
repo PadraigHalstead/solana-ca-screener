@@ -21,9 +21,7 @@ def main(base_token_address):
             print(f"No extracted data found for {base_token_address}.")
             return
         
-        print("wasd")
         dev_address = token.get("dev")
-        print(dev_address)
 
         if not dev_address:
             print(f"No dev address found for {base_token_address}.")

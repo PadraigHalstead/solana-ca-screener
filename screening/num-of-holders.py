@@ -9,7 +9,7 @@ from utils import remove_address_from_potential, add_address_to_blacklist
 from config import solscan_cookie, ua_platform, user_agent
 
 def main(base_token_address):  
-    url = f"https://api.solscan.io/v2/token/holders?token={base_token_address}&offset=0&size=1"
+    url = f"https://api-v2.solscan.io/v2/token/holder/total?address={base_token_address}"
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -31,7 +31,7 @@ def main(base_token_address):
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            total_holders = data.get('data', {}).get('total', 0)
+            total_holders = data.get('data', 0)
 
             if total_holders < 10 or total_holders > 2000:
                 add_address_to_blacklist(base_token_address)
@@ -39,9 +39,13 @@ def main(base_token_address):
                 print(f"Blacklisted: {base_token_address}.")
         else:
             print(f"Failed to fetch number of top holders. Blacklisting")
+            add_address_to_blacklist(base_token_address)
+            remove_address_from_potential(base_token_address)
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        add_address_to_blacklist(base_token_address)
+        remove_address_from_potential(base_token_address)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
