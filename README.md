@@ -27,12 +27,18 @@ git clone https://github.com/PadraigHalstead/solana-ca-screener.git
 ```
 
 3. Configure enviornment variables
-```env
-SOLANA_FM_API_KEY=
-ALLOW_PUMP_FUN=true
-SOLSCAN_COOKIE=
-```
 
-4. Run the program
+Solana FM API Key can be obtained for free here: https://portal.solana.fm/
 
-5. Add Contract Addresses to `Potential.csv`
+For SolScan:
+- Go to Solscan.io
+- Press F12
+- Click network tab
+- Refresh the page
+- Click on the document and headings as shown and copy the cookie to your .env file.
+
+![SolScan Instructions]([https://github.com/PadraigHalstead/solana-ca-screener/blob/main/docs/cookie.png?raw=true])
+
+5. Run the program
+
+6. Add Contract Addresses to `Potential.csv`
