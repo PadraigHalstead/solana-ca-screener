@@ -38,7 +38,7 @@ def main(base_token_address):
                 sys.exit(0)
             
 
-        url = f"https://api.solscan.io/v2/account?address={dev_address}"
+        url = f"https://api-v2.solscan.io/v2/account?address={dev_address}"
         headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -59,7 +59,8 @@ def main(base_token_address):
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            lamports = data.get('data', {}).get('lamports', 0)
+            account_data = data.get('data', {})
+            lamports = account_data.get('lamports', 0)
 
             # If dev sol > 10
             if lamports > 10000000000:

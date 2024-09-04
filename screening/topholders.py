@@ -13,7 +13,7 @@ from config import solscan_cookie, user_agent, ua_platform
 
 
 def call_solscan_api(ca):
-    url = f"https://api.solscan.io/v2/token/holders?token={ca}&offset=0&size=20"
+    url = f"https://api-v2.solscan.io/v2/token/holders?address={ca}&page_size=20&page=1"
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -102,7 +102,7 @@ def process_base_token_address(base_token_address):
 
     response_data = call_solscan_api(base_token_address)
     if response_data and response_data.get('data'):
-        holders = response_data['data']['result']
+        holders = response_data['data']
 
         try:
             percentage_top_10 = calculate_percentage(token_supply, holders, 10)
@@ -118,7 +118,7 @@ def process_base_token_address(base_token_address):
             else:
                 replace_top_holders(base_token_address, holders)
         except Exception as e:
-            print(f"Top Holders Unavailable")
+            print(f"Top Holders Unavailable: {e}")
             append_to_csv([base_token_address], './lists/blacklist.csv')
             potential_addresses.discard(base_token_address)
             blacklist_addresses.add(base_token_address)
