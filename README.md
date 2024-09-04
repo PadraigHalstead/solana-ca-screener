@@ -37,7 +37,7 @@ For SolScan:
 - Refresh the page
 - Click on the document and headings as shown and copy the cookie to your .env file.
 
-![SolScan Instructions]([https://github.com/PadraigHalstead/solana-ca-screener/blob/main/docs/cookie.png?raw=true])
+![https://github.com/PadraigHalstead/solana-ca-screener/blob/main/docs/cookie.png]
 
 5. Run the program
 
