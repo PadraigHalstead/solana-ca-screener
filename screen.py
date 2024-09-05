@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import remove_address_from_potential, add_address_to_gems
+from utils import remove_address_from_potential, add_address_to_gems, blacklist
 from config import python_executable, allow_pumpfun, solscan_cookie, api_key
+from screening.pumpfuncheck import check_pumpfun
 
 def ensure_file_exists(file_path):
     try:
@@ -48,12 +49,14 @@ def screen():
                 if is_blacklisted(base_token_address):
                     continue
 
-                if not (allow_pumpfun): 
-                    subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "pump-fun-check.py")), base_token_address])
-                    if is_blacklisted(base_token_address):
-                        print(f"Pump.fun launch. Blacklisting")
-                        continue 
-
+                if not allow_pumpfun:
+                    is_valid, reason = check_pumpfun(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    else:
+                        print("Pump.fun pass")
                 
                 print(f"Screening: {base_token_address}")
                 subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "rugcheck.py")), base_token_address])
