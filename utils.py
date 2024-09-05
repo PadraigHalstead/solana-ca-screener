@@ -1,6 +1,9 @@
 import csv
 import os
 import json
+import asyncio
+from playwright.async_api import async_playwright
+
 
 BLACKLIST_FILE = './lists/blacklist.csv'
 POTENTIAL_FILE = './lists/potential.csv'
@@ -135,3 +138,17 @@ def replace_top_holders(ca, holders):
 
     with open(top_holders_file, 'w') as file:
         json.dump(existing_data, file, indent=4)
+
+
+
+
+async def get_user_agent():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        page = await browser.new_page()
+        await page.goto("https://www.google.com")
+        user_agent = await page.evaluate("navigator.userAgent")
+        await browser.close()
+        return user_agent
+    
+
