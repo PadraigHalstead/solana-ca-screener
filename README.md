@@ -13,6 +13,8 @@ Currently supports:
 
 ### Demo Video
 
+https://github.com/user-attachments/assets/f9dcda87-b4ea-4e5a-9235-b370807091ec
+
 ## Getting Started
 
 1. Clone the repository.
