@@ -5,10 +5,11 @@ import time
 import sys
 import os
 from dotenv import load_dotenv
+from typing import Tuple, Optional
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import save_addresses_to_csv, load_addresses_from_csv, append_to_csv, replace_top_holders, remove_address_from_potential, add_address_to_blacklist
+from utils import replace_top_holders
 from config import solscan_cookie, user_agent, ua_platform
 
 
@@ -34,11 +35,6 @@ def call_solscan_api(ca):
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()
-    else:
-        print(f"Failed to fetch data for {ca}. Status code: {response.status_code}")
-        add_address_to_blacklist(base_token_address)
-        remove_address_from_potential(base_token_address)
-        return None
 
 def read_json(file_path):
     if os.path.exists(file_path):
@@ -76,29 +72,25 @@ def check_same_amount(holders):
         else:
             amount_counts[amount] = 1
     for amount, count in amount_counts.items():
-        if count >= 3:
+        if count >= 5:
             return True
     return False
 
-def process_base_token_address(base_token_address):
-    blacklist_addresses = load_addresses_from_csv('./lists/blacklist.csv')
-    potential_addresses = load_addresses_from_csv('./lists/potential.csv')
+def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
-    if base_token_address in blacklist_addresses:
-        print(f"Address {base_token_address} is already blacklisted.")
-        return
+    if not os.path.exists('../top_holders.json'):
+        with open('../top_holders.json', 'w') as file:
+            json.dump({}, file)
 
     extracted_data = read_json('./extracted_data.json')
 
     token = next((item for item in extracted_data if item["mint"] == base_token_address), None)
     if not token:
-        print(f"No extracted data found for {base_token_address}.")
-        return
+        return False, "No extracted data found for this token. Blacklisting"
 
     token_supply = token.get("token_supply")
     if not token_supply:
-        print(f"Token supply not found for {base_token_address}.")
-        return
+        return False, "Token supply not found. Blacklisting."
 
     response_data = call_solscan_api(base_token_address)
     if response_data and response_data.get('data'):
@@ -110,33 +102,18 @@ def process_base_token_address(base_token_address):
             holder_exceeds_6_percent = check_holder_percentage(token_supply, holders)
             same_amount_check = check_same_amount(holders[:20])
 
-            if percentage_top_10 > 32 or percentage_top_20 > 40 or holder_exceeds_6_percent or same_amount_check:
-                print(f"Blacklisted {base_token_address}.")
-                append_to_csv([base_token_address], './lists/blacklist.csv')
-                potential_addresses.discard(base_token_address)
-                blacklist_addresses.add(base_token_address)
+            if percentage_top_10 > 32:
+                return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting."
+            elif percentage_top_20 > 40:
+                return False, f"Top 20 holder is {percentage_top_20}%. Blacklisting."
+            elif holder_exceeds_6_percent:
+                return False, "One or more holders with more than 6%. Blacklisting."
+            elif same_amount_check:
+                return False, "Suspicious distribution. Potential mass sell bot. Blacklisting."
             else:
                 replace_top_holders(base_token_address, holders)
+                return True, "Top Holders Pass"
         except Exception as e:
-            print(f"Top Holders Unavailable: {e}")
-            append_to_csv([base_token_address], './lists/blacklist.csv')
-            potential_addresses.discard(base_token_address)
-            blacklist_addresses.add(base_token_address)
-
-        time.sleep(1)
-
-    save_addresses_to_csv(list(potential_addresses), './lists/potential.csv')
-    save_addresses_to_csv(list(blacklist_addresses), './lists/blacklist.csv')
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python topholders.py <BaseTokenAddress>")
-        sys.exit(1)
-
-    base_token_address = sys.argv[1]
-
-    if not os.path.exists('../top_holders.json'):
-        with open('../top_holders.json', 'w') as file:
-            json.dump({}, file)
-
-    process_base_token_address(base_token_address)
+            return False, "Error occured obtaining top holders. Blacklisting."
+    else:
+        return False, "Top holders data not found. Blacklisting."

@@ -8,8 +8,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import remove_address_from_potential, add_address_to_gems
+from utils import remove_address_from_potential, add_address_to_gems, blacklist
 from config import python_executable, allow_pumpfun, solscan_cookie, api_key
+from screening.pumpfuncheck import check_pumpfun
+from screening.rugcheck import rugcheck
+from screening.topholders import top_holders
+from screening.devwallet import devwallet
+from screening.numofholders import num_of_holders
+from screening.devsolbalance import dev_sol_balance
+
+
 
 def ensure_file_exists(file_path):
     try:
@@ -47,54 +55,62 @@ def screen():
 
                 if is_blacklisted(base_token_address):
                     continue
-
-                if not (allow_pumpfun): 
-                    subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "pump-fun-check.py")), base_token_address])
-                    if is_blacklisted(base_token_address):
-                        print(f"Pump.fun launch. Blacklisting")
-                        continue 
-
+   
+                if not allow_pumpfun:
+                    is_valid, reason = check_pumpfun(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue    
+                    print(reason)              
                 
-                print(f"Screening: {base_token_address}")
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "rugcheck.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Rugcheck Fail")
+                is_valid, reason = rugcheck(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Rugcheck Pass")                
+                print(reason)              
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "topholders.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Top Holders Fail")
+                is_valid, reason = top_holders(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Top Holders Pass")
+                print(reason)  
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "devwallet.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Dev Holdings Fail")
+                is_valid, reason = devwallet(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Dev Holdings Pass")
+                print(reason)
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "num-of-holders.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Holders Fail")                
+                is_valid, reason = num_of_holders(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Holders Pass")                
+                print(reason)             
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "dev-sol-balance.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Sol Balance Fail")
+                is_valid, reason = dev_sol_balance(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Dev Sol Balance Pass")
+                print(reason)
 
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "airdrops.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Airdrops / Bundle Snipe Fail")                
+                is_valid, reason = dev_sol_balance(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Airdrops / Bundle Snipe Pass")
+                print(reason)
 
                 remove_address_from_potential(base_token_address)
                 add_address_to_gems(base_token_address)
+                print(f"Added to gems: {base_token_address}")
+
 
         time.sleep(0.1)
 

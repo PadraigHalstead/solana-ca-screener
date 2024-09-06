@@ -3,39 +3,32 @@ import json
 import sys
 import os
 from dotenv import load_dotenv
+from typing import Tuple, Optional
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import remove_address_from_potential, add_address_to_blacklist
 from pumpfundev import getpumpfundevwallet
 from config import solscan_cookie, user_agent, ua_platform
 
 
-def main(base_token_address):  
+def dev_sol_balance(base_token_address: str) -> Tuple[bool, Optional[str]]:  
     try:
         with open('./extracted_data.json', 'r') as file:
             extracted_data = json.load(file)
         
         token = next((item for item in extracted_data if item["mint"] == base_token_address), None)
         if not token:
-            print(f"No extracted data found for {base_token_address}.")
-            return
+            return False, "No extracted data found. Blacklisting:"
         
         dev_address = token.get("dev")
 
         if not dev_address:
-            print(f"No dev address found for {base_token_address}.")
-            remove_address_from_potential(base_token_address)
-            add_address_to_blacklist(base_token_address)
-            return
+            return False, "Dev address not found. Blacklisting:"
         
         if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
             dev_address = getpumpfundevwallet(base_token_address)
             if dev_address == "":
-                print("Error getting dev address")
-                remove_address_from_potential(base_token_address)
-                add_address_to_blacklist(base_token_address)
-                sys.exit(0)
+                return False, "Dev address not found. Blacklisting:"
             
 
         url = f"https://api-v2.solscan.io/v2/account?address={dev_address}"
@@ -64,23 +57,10 @@ def main(base_token_address):
 
             # If dev sol > 10
             if lamports > 10000000000:
-                add_address_to_blacklist(base_token_address)
-                remove_address_from_potential(base_token_address)
-                print(f"Blacklisted: {base_token_address}.")
+                return False, "Dev SOL > 10. Blacklisting:"
+            return True, "Dev SOL Balance Pass"
         else:
-            print(f"Failed to fetch data for {dev_address}. Status code: {response.status_code}")
-            remove_address_from_potential(base_token_address)
-            add_address_to_blacklist(base_token_address)
+            return False, "An error occured obtaining dev address. Blacklisting:"
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python check-lamports.py <BaseTokenAddress>")
-        sys.exit(1)
-
-    base_token_address = sys.argv[1]
-    main(base_token_address)
+        return False, "An error occured obtaining dev address. Blacklisting:"
