@@ -1,14 +1,14 @@
 import requests
 import sys
 import os
+from typing import Tuple, Optional 
 from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import remove_address_from_potential, add_address_to_blacklist
 from config import solscan_cookie, ua_platform, user_agent
 
-def main(base_token_address):  
+def num_of_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:  
     url = f"https://api-v2.solscan.io/v2/token/holder/total?address={base_token_address}"
     headers = {
         "Accept": "application/json, text/plain, */*",
@@ -33,24 +33,13 @@ def main(base_token_address):
             data = response.json()
             total_holders = data.get('data', 0)
 
-            if total_holders < 10 or total_holders > 2000:
-                add_address_to_blacklist(base_token_address)
-                remove_address_from_potential(base_token_address)
-                print(f"Blacklisted: {base_token_address}.")
+            if total_holders < 10:
+                return False, "Very low number of holders. Blacklisting."
+            elif total_holders > 5000:
+                return False, "Very High number of holders. Blacklisting."
         else:
-            print(f"Failed to fetch number of top holders. Blacklisting")
-            add_address_to_blacklist(base_token_address)
-            remove_address_from_potential(base_token_address)
+            return False, "Failed to fetch number of top holders. Blacklisting"
+        return True, "Number Of Holders Pass"
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        add_address_to_blacklist(base_token_address)
-        remove_address_from_potential(base_token_address)
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python num-of-holders.py <BaseTokenAddress>")
-        sys.exit(1)
-
-    base_token_address = sys.argv[1]
-    main(base_token_address)
+        return False, "An error occured obtaining number of holders. Blacklisting"

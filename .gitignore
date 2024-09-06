@@ -2,3 +2,7 @@
 extracted_data.json
 top_holders.json
 /lists
+lists/potential.csv
+lists/blacklist.csv
+lists/gems.csv
+*.pyc

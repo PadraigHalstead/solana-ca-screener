@@ -2,6 +2,7 @@ import sys
 import json
 import requests
 import os
+from typing import Tuple, Optional
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -32,13 +33,7 @@ def call_solscan_api(dev_address):
     response = requests.get(url, headers=headers)
     return response
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python devwallet.py <BaseTokenAddress>")
-        sys.exit(1)
-
-    base_token_address = sys.argv[1]
-    pumpfun = 0
+def devwallet(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
     with open('./extracted_data.json', 'r') as file:
         extracted_data = json.load(file)
@@ -50,20 +45,13 @@ def main():
         token_supply = entry.get("token_supply")
 
         if not dev_address or token_supply is None:
-            print("Required data missing in the extracted data")
-            remove_address_from_potential(base_token_address)
-            add_address_to_blacklist(base_token_address)
-            sys.exit(1)
+            return False, "Required data missing in the extracted data. Blacklisting:"
 
         # Pump.fun wallet address
         if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
             dev_address = getpumpfundevwallet(base_token_address)
             if dev_address == "":
-                print("Error getting dev address")
-                remove_address_from_potential(base_token_address)
-                add_address_to_blacklist(base_token_address)
-                sys.exit(0)
-            pumpfun = 1
+                return False, "Error getting dev address"
 
         response = call_solscan_api(dev_address)
 
@@ -79,27 +67,12 @@ def main():
             if amount is not None:
                 percentage = (amount / token_supply) * 100
                 if percentage > 6:
-                    blacklist_addresses = load_addresses_from_csv('./lists/blacklist.csv')
-                    potential_addresses = load_addresses_from_csv('./lists/potential.csv')
-                    
-                    if base_token_address in potential_addresses:
-                        remove_address_from_potential(base_token_address)
-                        add_address_to_blacklist(base_token_address)
-                    
-                    save_addresses_to_csv(potential_addresses)
-                    save_addresses_to_csv(blacklist_addresses)
-                    print(f"Blacklisted: {base_token_address}.")
+                    return False, "Dev owns more than 6%. Blacklisting:"
+                return True, "Dev Holdings Pass"
             else:
-                print(f"Token address {base_token_address} not found in dev wallet")
-                if pumpfun == 1:
-                    remove_address_from_potential(base_token_address)
-                    add_address_to_blacklist(base_token_address)
+                return False, "Dev has sold. Blacklisting:"
+            
 
         except ValueError as e:
-            print("Failed to calculate dev %")
-            remove_address_from_potential(base_token_address)
-            add_address_to_blacklist(base_token_address)
-            print("Response Content:", response.content)
-
-if __name__ == "__main__":
-    main()
+            return False, "Failed to calculate dev %. Blacklisting:"
+        

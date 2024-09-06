@@ -72,7 +72,7 @@ def check_same_amount(holders):
         else:
             amount_counts[amount] = 1
     for amount, count in amount_counts.items():
-        if count >= 3:
+        if count >= 5:
             return True
     return False
 

@@ -39,23 +39,23 @@ def extract_data(rugcheck_response):
 
     if mint_authority is not None and mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1':
         print(mint_authority)
-        return data, False, "Mint Authority is enabled. Blacklisting"
+        return data, False, "Mint Authority is enabled. Blacklisting:"
     elif freeze_authority is not None:
-        return data, False, "Freeze Authority is enabled. Blacklisting"
+        return data, False, "Freeze Authority is enabled. Blacklisting:"
     elif token_meta.get("mutable", True):
-        return data, False, "Metadata is mutable. Blacklisting"
+        return data, False, "Metadata is mutable. Blacklisting:"
     else:
         risks = rugcheck_response.get("risks", [])
         for risk in risks:
             if risk.get("name") == "Low Liquidity":
-                return data, False, "Token has very Low Liquidity. Blacklisting"
+                return data, False, "Token has very Low Liquidity. Blacklisting:"
         return data, True, "Rugcheck Pass"
 
 def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
     rugcheck_response = call_rugcheck_api(base_token_address)
     if rugcheck_response is None:
-        return False, "No response from Rugcheck"
+        return False, "No response from Rugcheck. Blacklisting:"
 
     extracted_data, is_blacklisted, reason = extract_data(rugcheck_response)
 

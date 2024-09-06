@@ -9,9 +9,9 @@ def check_pumpfun(base_token_address: str) -> Tuple[bool, Optional[str]]:
     try:
         if response.status_code == 200:
             if response.text != "[]":
-                return False, "Pump.fun tokens not allowed. Blacklisting"
+                return False, "Pump.fun tokens not allowed. Blacklisting:"
             else: 
-                return True, "Pump.fun check pass"
+                return True, "Pump.fun Check Pass"
     except:
-        return False, "Error fetching pump.fun token status. Blacklisting"
+        return False, "Error fetching pump.fun token status. Blacklisting:"
 
