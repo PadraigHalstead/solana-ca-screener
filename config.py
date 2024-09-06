@@ -2,10 +2,13 @@ import os
 from dotenv import load_dotenv
 import sys
 import platform
+import asyncio
 load_dotenv()
+from utils import get_user_agent
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+print('Configuring settings. Please wait...')
 solscan_cookie = os.getenv('SOLSCAN_COOKIE')
 if not solscan_cookie:
     raise Exception("API key not found. Please add your SOLSCAN_COOKIE to the .env file")
@@ -17,10 +20,12 @@ if not api_key:
 allow_pumpfun = os.getenv('ALLOW_PUMP_FUN', 'false').lower() == 'true'
 
 if platform.system() == 'Linux':
-    python_executable = '/usr/bin/python3'
     ua_platform = "Linux"
-    user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-else:
-    python_executable = 'python'
+elif platform.system() == 'Windows':
     ua_platform = "Windows"
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+else:
+    raise Exception("Unsupported Operating System. This project only supports: Windows, Linux")
+
+print("Setting up user agent. Your browser will now open")
+user_agent = asyncio.run(get_user_agent())
+print('Ready to screen')

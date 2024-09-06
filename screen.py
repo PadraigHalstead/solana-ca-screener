@@ -9,7 +9,7 @@ load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import remove_address_from_potential, add_address_to_gems
-from config import python_executable, allow_pumpfun, solscan_cookie, api_key
+from config import allow_pumpfun, solscan_cookie, api_key
 
 def ensure_file_exists(file_path):
     try:

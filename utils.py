@@ -140,8 +140,6 @@ def replace_top_holders(ca, holders):
         json.dump(existing_data, file, indent=4)
 
 
-
-
 async def get_user_agent():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
