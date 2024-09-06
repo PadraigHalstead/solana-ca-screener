@@ -121,6 +121,10 @@ def add_address_to_blacklist(base_token_address):
     except Exception as e:
         print(f"Error writing to blacklist CSV: {e}")
 
+def blacklist(base_token_address):
+    add_address_to_blacklist(base_token_address)
+    remove_address_from_potential(base_token_address)
+
 def replace_top_holders(ca, holders):
     top_holders_file = TOP_HOLDERS_FILE
     filtered_holders = [{"wallet": holder['owner'], "amount": holder['amount']} for holder in holders]

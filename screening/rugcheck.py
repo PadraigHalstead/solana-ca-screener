@@ -3,9 +3,9 @@ import json
 import time
 import sys
 import os
+from typing import Tuple, Optional
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import remove_address_from_potential, add_address_to_blacklist, load_addresses_from_csv, save_addresses_to_csv
 
 def call_rugcheck_api(ca):
     url = f"https://api.rugcheck.xyz/v1/tokens/{ca}/report"
@@ -21,9 +21,6 @@ def call_rugcheck_api(ca):
         time.sleep(0.5)
         return call_rugcheck_api(ca)
     else:
-        print(f"Unknown error for token {base_token_address}. Blacklisting.")
-        add_address_to_blacklist(base_token_address)
-        remove_address_from_potential(base_token_address)
         return None
 
 def extract_data(rugcheck_response):
@@ -41,31 +38,26 @@ def extract_data(rugcheck_response):
     }
 
     if mint_authority is not None and mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1':
-        return data, True
+        print(mint_authority)
+        return data, False, "Mint Authority is enabled. Blacklisting:"
     elif freeze_authority is not None:
-        return data, True
-    elif token_meta.get("mutable", False):
-        return data, True
+        return data, False, "Freeze Authority is enabled. Blacklisting:"
+    elif token_meta.get("mutable", True):
+        return data, False, "Metadata is mutable. Blacklisting:"
     else:
         risks = rugcheck_response.get("risks", [])
         for risk in risks:
             if risk.get("name") == "Low Liquidity":
-                return data, True
-        return data, False
+                return data, False, "Token has very Low Liquidity. Blacklisting:"
+        return data, True, "Rugcheck Pass"
 
-def process_base_token_address(base_token_address):
-    blacklist_addresses = load_addresses_from_csv('./lists/blacklist.csv')
-    potential_addresses = load_addresses_from_csv('./lists/potential.csv')
-
-    if base_token_address in blacklist_addresses:
-        print(f"Address {base_token_address} is already blacklisted.")
-        return
+def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
     rugcheck_response = call_rugcheck_api(base_token_address)
     if rugcheck_response is None:
-        return
+        return False, "No response from Rugcheck. Blacklisting:"
 
-    extracted_data, is_blacklisted = extract_data(rugcheck_response)
+    extracted_data, is_blacklisted, reason = extract_data(rugcheck_response)
 
     try:
         with open('./extracted_data.json', 'w') as file:
@@ -76,19 +68,5 @@ def process_base_token_address(base_token_address):
     except Exception as e:
         print(f"Error updating extracted data file: {e}")
 
-    if is_blacklisted:
-        add_address_to_blacklist(base_token_address)
-        remove_address_from_potential(base_token_address)
-        print(f"Blacklisted {base_token_address}.")
-    else:
-        if base_token_address not in potential_addresses:
-            potential_addresses.add(base_token_address)
-            save_addresses_to_csv(list(potential_addresses))
+    return is_blacklisted, reason
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python rugcheck.py <BaseTokenAddress>")
-        sys.exit(1)
-
-    base_token_address = sys.argv[1]
-    process_base_token_address(base_token_address)
