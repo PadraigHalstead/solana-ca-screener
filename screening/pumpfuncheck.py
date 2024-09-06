@@ -11,7 +11,7 @@ def check_pumpfun(base_token_address: str) -> Tuple[bool, Optional[str]]:
             if response.text != "[]":
                 return False, "Pump.fun tokens not allowed. Blacklisting"
             else: 
-                return True, None
+                return True, "Pump.fun check pass"
     except:
         return False, "Error fetching pump.fun token status. Blacklisting"
 
