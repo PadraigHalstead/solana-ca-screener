@@ -146,7 +146,7 @@ def replace_top_holders(ca, holders):
 
 async def get_user_agent():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=False, channel="chrome")
         page = await browser.new_page()
         await page.goto("https://www.google.com")
         user_agent = await page.evaluate("navigator.userAgent")
