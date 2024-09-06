@@ -7,3 +7,7 @@ lists/blacklist.csv
 lists/gems.csv
 *.pyc
 *.csv
+lists/potential.csv
+lists/gems.csv
+/lists
+lists/blacklist.csv
