@@ -6,3 +6,4 @@ lists/potential.csv
 lists/blacklist.csv
 lists/gems.csv
 *.pyc
+*.csv

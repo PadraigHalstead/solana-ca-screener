@@ -1,11 +1,10 @@
 import requests
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
 from config import solscan_cookie, ua_platform, user_agent, api_key
 
-def getpumpfundevwallet(base_token_address):
+def getpumpfundevwallet(base_token_address: str) -> str:
     url = f"https://api-v2.solscan.io/v2/account?address={base_token_address}"
     headers = {
         "Accept": "application/json, text/plain, */*",

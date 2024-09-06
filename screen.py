@@ -15,6 +15,8 @@ from screening.rugcheck import rugcheck
 from screening.topholders import top_holders
 from screening.devwallet import devwallet
 from screening.numofholders import num_of_holders
+from screening.devsolbalance import dev_sol_balance
+
 
 
 def ensure_file_exists(file_path):
@@ -90,7 +92,7 @@ def screen():
                     continue
                 print(reason)             
 
-                is_valid, reason = num_of_holders(base_token_address)
+                is_valid, reason = dev_sol_balance(base_token_address)
                 if not is_valid:
                     blacklist(base_token_address)
                     print(f"{reason} {base_token_address}")
@@ -98,14 +100,17 @@ def screen():
                 print(reason)
 
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "airdrops.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Airdrops / Bundle Snipe Fail")                
+                is_valid, reason = dev_sol_balance(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Airdrops / Bundle Snipe Pass")
+                print(reason)
 
                 remove_address_from_potential(base_token_address)
                 add_address_to_gems(base_token_address)
+                print(f"Added to gems: {base_token_address}")
+
 
         time.sleep(0.1)
 

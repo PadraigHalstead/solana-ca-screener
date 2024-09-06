@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import save_addresses_to_csv, load_addresses_from_csv, add_address_to_blacklist, remove_address_from_potential
 from pumpfundev import getpumpfundevwallet
 from config import solscan_cookie, ua_platform, user_agent
 
