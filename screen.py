@@ -12,6 +12,7 @@ from utils import remove_address_from_potential, add_address_to_gems, blacklist
 from config import python_executable, allow_pumpfun, solscan_cookie, api_key
 from screening.pumpfuncheck import check_pumpfun
 from screening.rugcheck import rugcheck
+from screening.topholders import top_holders
 
 def ensure_file_exists(file_path):
     try:
@@ -65,11 +66,12 @@ def screen():
                     continue
                 print(reason)              
 
-                subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "topholders.py")), base_token_address])
-                if is_blacklisted(base_token_address):
-                    print(f"Top Holders Fail")
+                is_valid, reason = top_holders(base_token_address)
+                if not is_valid:
+                    blacklist(base_token_address)
+                    print(f"{reason} {base_token_address}")
                     continue
-                print(f"Top Holders Pass")
+                print(reason)  
 
                 subprocess.run([python_executable, os.path.abspath(os.path.join(base_dir, "screening", "devwallet.py")), base_token_address])
                 if is_blacklisted(base_token_address):
