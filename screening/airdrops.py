@@ -7,7 +7,6 @@ from typing import Tuple, Optional
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import add_address_to_blacklist, remove_address_from_potential
 from config import api_key, user_agent
 
 def get_transfer_details(dev_address, ca):
@@ -24,14 +23,8 @@ def get_transfer_details(dev_address, ca):
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"Failed to fetch transfer details from Solana FM API. Status code: {response.status_code}")
-            remove_address_from_potential(base_token_address)
-            add_address_to_blacklist(base_token_address)
             return None
     except Exception as e:
-        print(f"Error fetching transfer details: {e}")
-        remove_address_from_potential(base_token_address)
-        add_address_to_blacklist(base_token_address)
         return None
 
 def calculate_percentage(amount, token_supply):

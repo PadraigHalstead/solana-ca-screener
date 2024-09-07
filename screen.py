@@ -1,15 +1,13 @@
 import time
-import subprocess
 import csv
 import os
 import sys
-import logging
 from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import remove_address_from_potential, add_address_to_gems, blacklist
-from config import allow_pumpfun, solscan_cookie, api_key, user_agent
+from utils import remove_address_from_potential, add_address_to_gems, blacklist, is_blacklisted, ensure_file_exists
+from config import allow_pumpfun, solscan_cookie, api_key, user_agent # Adding user agent to set on startup
 from screening.pumpfuncheck import check_pumpfun
 from screening.rugcheck import rugcheck
 from screening.topholders import top_holders
@@ -18,23 +16,6 @@ from screening.numofholders import num_of_holders
 from screening.devsolbalance import dev_sol_balance
 from screening.airdrops import airdrops
 
-def ensure_file_exists(file_path):
-    try:
-        if not os.path.exists(file_path):
-            open(file_path, 'a').close()
-    except Exception as e:
-        logging.error(f"Error ensuring file exists: {file_path}, Error: {e}")
-
-def is_blacklisted(base_token_address):
-    try:
-        with open('./lists/blacklist.csv', 'r') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                if row and row[0] == base_token_address:
-                    return True
-    except Exception as e:
-        logging.error(f"Error reading blacklist file. Error: {e}")
-    return False
 
 def screen():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,73 +26,76 @@ def screen():
     ensure_file_exists(blacklist_file)
     ensure_file_exists(potential_file)
     ensure_file_exists(gems_file)
+    try:
+        while True:
+            with open(potential_file, 'r') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    base_token_address = row['BaseTokenAddress']
 
-    while True:
-        with open(potential_file, 'r') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                base_token_address = row['BaseTokenAddress']
+                    if is_blacklisted(base_token_address):
+                        continue
+                    
+                    if not allow_pumpfun:
+                        is_valid, reason = check_pumpfun(base_token_address)
+                        if not is_valid:
+                            blacklist(base_token_address)
+                            print(f"{reason} {base_token_address}")
+                            continue    
+                        print(reason)              
 
-                if is_blacklisted(base_token_address):
-                    continue
-   
-                if not allow_pumpfun:
-                    is_valid, reason = check_pumpfun(base_token_address)
+                    is_valid, reason = rugcheck(base_token_address)
                     if not is_valid:
                         blacklist(base_token_address)
                         print(f"{reason} {base_token_address}")
-                        continue    
+                        continue
                     print(reason)              
-                
-                is_valid, reason = rugcheck(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)              
 
-                is_valid, reason = top_holders(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)  
+                    is_valid, reason = top_holders(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)  
 
-                is_valid, reason = devwallet(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)
+                    is_valid, reason = devwallet(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)
 
-                is_valid, reason = num_of_holders(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)             
+                    is_valid, reason = num_of_holders(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)             
 
-                is_valid, reason = dev_sol_balance(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)
+                    is_valid, reason = dev_sol_balance(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)
 
 
-                is_valid, reason = airdrops(base_token_address)
-                if not is_valid:
-                    blacklist(base_token_address)
-                    print(f"{reason} {base_token_address}")
-                    continue
-                print(reason)
+                    is_valid, reason = airdrops(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)
 
-                remove_address_from_potential(base_token_address)
-                add_address_to_gems(base_token_address)
-                print(f"Added to gems: {base_token_address}")
+                    remove_address_from_potential(base_token_address)
+                    add_address_to_gems(base_token_address)
+                    print(f"Added to gems: {base_token_address}")
 
 
-        time.sleep(0.1)
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\nStopping...")
+        sys.exit(1)
 
 if __name__ == "__main__": 
     if allow_pumpfun == "":

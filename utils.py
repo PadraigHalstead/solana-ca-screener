@@ -1,7 +1,7 @@
 import csv
 import os
 import json
-import asyncio
+import logging
 from playwright.async_api import async_playwright
 
 
@@ -154,3 +154,20 @@ async def get_user_agent():
         return user_agent
     
 
+def is_blacklisted(base_token_address):
+    try:
+        with open('./lists/blacklist.csv', 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                if row and row[0] == base_token_address:
+                    return True
+    except Exception as e:
+        logging.error(f"Error reading blacklist file. Error: {e}")
+    return False
+
+def ensure_file_exists(file_path):
+    try:
+        if not os.path.exists(file_path):
+            open(file_path, 'a').close()
+    except Exception as e:
+        logging.error(f"Error ensuring file exists: {file_path}, Error: {e}")
