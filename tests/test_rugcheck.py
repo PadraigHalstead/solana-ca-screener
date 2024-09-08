@@ -26,7 +26,7 @@ def test_rugcheck_low_liquidity() -> False:
     assert is_valid == False
     assert reason == "Token has very Low Liquidity. Blacklisting:"
 
-def test_copy_cat() -> False:
+def test_rugcheck_copy_cat() -> False:
     is_valid, reason = rugcheck("8JAoMxhNwJbMPMHTtdUnHafUhr43rbF6odddfFFfzb3N") #ZION
     assert is_valid == False
     assert reason == "Token is copying a verifed token symbol. Blacklisting:"
