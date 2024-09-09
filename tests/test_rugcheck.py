@@ -1,5 +1,4 @@
 from screening.rugcheck import rugcheck
-from time import sleep
 
 def test_rugcheck_pass() -> False:
     is_valid, reason = rugcheck("7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr") #POPCAT

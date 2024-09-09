@@ -25,6 +25,13 @@ def test_top_holders_exceeds_6():
 #     assert is_valid == False
 #     assert reason == "Suspicious distribution. Potential mass sell bot. Blacklisting."
 
+# def test_top_holders_distribution():
+#     rugcheck("4sfkd8gh4oVT75FkRVQ5pLFPepynJdrqf332Beq5pump")
+#     is_valid, reason = top_holders("4sfkd8gh4oVT75FkRVQ5pLFPepynJdrqf332Beq5pump") #FWOG
+#     assert is_valid == False
+#     assert reason == "Suspicious distribution. Potential mass sell bot. Blacklisting."
+
+
 def test_top_holders_pass():
     rugcheck("2vyPCxHX72KwLo2dTCTERH9fMVz9zHb7md51cas9pump")
     is_valid, reason = top_holders("2vyPCxHX72KwLo2dTCTERH9fMVz9zHb7md51cas9pump") #PEIPEI

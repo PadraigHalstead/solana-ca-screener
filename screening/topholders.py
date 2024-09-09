@@ -64,18 +64,24 @@ def check_holder_percentage(token_supply, holders):
             return True
     return False
 
-def check_same_amount(holders):
-    amount_counts = {}
-    for holder in holders:
-        amount = holder['amount']
-        if amount in amount_counts:
-            amount_counts[amount] += 1
-        else:
-            amount_counts[amount] = 1
-    for amount, count in amount_counts.items():
-        if count >= 5:
-            return True
-    return False
+def check_distribution(token_supply, holders):
+
+    if len(holders) < 25:
+        return False
+    
+    selected_holders = holders[14:25]
+    total_pct = 0
+    
+    for holder in selected_holders:
+        percentage = (holder['amount'] / token_supply) * 100
+        total_pct += percentage
+    
+    avg_pct = total_pct / len(selected_holders)
+    
+    if avg_pct < 0.1:
+        return False
+    return True
+
 
 def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
@@ -101,7 +107,7 @@ def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
             percentage_top_10 = calculate_percentage(token_supply, holders, 10)
             percentage_top_20 = calculate_percentage(token_supply, holders, 20)
             holder_exceeds_6_percent = check_holder_percentage(token_supply, holders)
-            same_amount_check = check_same_amount(holders[:20])
+            distribution_check = check_distribution(token_supply, holders)
 
             if percentage_top_10 > 32:
                 return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting."
@@ -109,8 +115,8 @@ def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
                 return False, f"Top 20 holder is {percentage_top_20}%. Blacklisting."
             elif holder_exceeds_6_percent:
                 return False, "One or more holders with more than 6%. Blacklisting."
-            elif same_amount_check:
-                return False, "Suspicious distribution. Potential mass sell bot. Blacklisting."
+            elif not distribution_check:
+                return False, "Suspicious distribution. Potential mass sell bot. Blacklisting.n"
             else:
                 replace_top_holders(base_token_address, holders)
                 return True, "Top Holders Pass"

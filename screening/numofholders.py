@@ -35,7 +35,7 @@ def num_of_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
             if total_holders < 10:
                 return False, "Very low number of holders. Blacklisting."
-            elif total_holders > 5000:
+            elif total_holders > 4000:
                 return False, "Very High number of holders. Blacklisting."
         else:
             return False, "Failed to fetch number of top holders. Blacklisting"
