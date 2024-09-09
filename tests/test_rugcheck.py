@@ -1,4 +1,5 @@
 from screening.rugcheck import rugcheck
+from time import sleep
 
 def test_rugcheck_pass() -> False:
     is_valid, reason = rugcheck("7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr") #POPCAT
@@ -30,3 +31,8 @@ def test_rugcheck_copy_cat() -> False:
     is_valid, reason = rugcheck("8JAoMxhNwJbMPMHTtdUnHafUhr43rbF6odddfFFfzb3N") #ZION
     assert is_valid == False
     assert reason == "Token is copying a verifed token symbol. Blacklisting:"
+
+def test_rugcheck_lp_not_locked() -> False:
+    is_valid, reason = rugcheck("7fc26zrkcpatx9e62qxjmw3hk1cm1jlqwukpyfp4vwl5") #CNPEPE
+    assert is_valid == False
+    assert reason == "Deployer is holding LP. Blacklisting:"

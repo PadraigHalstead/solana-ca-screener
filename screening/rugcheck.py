@@ -51,6 +51,13 @@ def extract_data(rugcheck_response):
                 return data, False, "Token has very Low Liquidity. Blacklisting:"
             if risk.get("name") == "Copycat token":
                 return data, False, "Token is copying a verifed token symbol. Blacklisting:"
+    
+    markets = rugcheck_response.get("markets", [])
+    for market in markets:
+        lp_locked_pct = market.get('lp', {}).get('lpLockedPct', None)
+        if lp_locked_pct is not None and lp_locked_pct < 97:
+            return data, False, "Deployer is holding LP. Blacklisting:"
+
         return data, True, "Rugcheck Pass"
 
 def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:
