@@ -61,10 +61,10 @@ def airdrops(base_token_address: str) -> Tuple[bool, Optional[str]]:
             for action in transaction['data']:
                 if action['action'] == 'transfer':
                     if action['source'] != action['destination']: 
-                        if action['source'] == dev_address and action['token'] == base_token_address and action['destination'] != "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1":
+                        if action['source'] == dev_address and action['token'] == base_token_address and (action['destination'] != "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" or action['destination'] != "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"):
                             print(action['amount'])
                             total_transferred_amount += action['amount']
-                        elif action['source'] == "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" and action['destination'] == dev_address:
+                        elif (action['source'] == "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" or action['source'] == '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8') and action['destination'] == dev_address:
                             total_transferred_amount += action['amount']
         except Exception as e:
             return False, "Error processing transaction hash {transaction['transactionHash']}: {e}"

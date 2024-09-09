@@ -45,6 +45,7 @@ def read_json(file_path):
 def filter_wallets(holders):
     excluded_wallets = [
         "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
+        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
         "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1"
     ]
     return [holder for holder in holders if holder['owner'] not in excluded_wallets]

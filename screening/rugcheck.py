@@ -37,7 +37,7 @@ def extract_data(rugcheck_response):
         "mutable": token_meta.get("mutable", False)
     }
 
-    if mint_authority is not None and mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1':
+    if mint_authority is not None and  (mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' or mint_authority != '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'):
         print(mint_authority)
         return data, False, "Mint Authority is enabled. Blacklisting:"
     elif freeze_authority is not None:
