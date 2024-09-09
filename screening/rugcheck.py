@@ -49,6 +49,8 @@ def extract_data(rugcheck_response):
         for risk in risks:
             if risk.get("name") == "Low Liquidity":
                 return data, False, "Token has very Low Liquidity. Blacklisting:"
+            if risk.get("name") == "Copycat token":
+                return data, False, "Token is copying a verifed token symbol. Blacklisting:"
         return data, True, "Rugcheck Pass"
 
 def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:
