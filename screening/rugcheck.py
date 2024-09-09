@@ -58,6 +58,15 @@ def extract_data(rugcheck_response):
         if lp_locked_pct is not None and lp_locked_pct < 97:
             return data, False, "Deployer is holding LP. Blacklisting:"
 
+    total_insider_pct = 0
+    top_holders = rugcheck_response.get("topHolders", [])
+    for holder in top_holders:
+        if holder.get("insider", False):
+            total_insider_pct += holder.get("pct", 0)
+
+        if total_insider_pct >= 10:
+            return data, False, f"Insider holdings are too high ({total_insider_pct}%). Blacklisting:"
+
         return data, True, "Rugcheck Pass"
 
 def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:

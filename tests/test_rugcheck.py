@@ -21,7 +21,6 @@ def test_rugcheck_mutable_metadata() -> False:
     assert is_valid == False
     assert reason == "Metadata is mutable. Blacklisting:"
 
-
 def test_rugcheck_low_liquidity() -> False:
     is_valid, reason = rugcheck("4JijZiX1s5PNwSpbGUjf5BQSrRV6DnVH4MsggM4AuajW") #PETATE
     assert is_valid == False
@@ -36,3 +35,8 @@ def test_rugcheck_lp_not_locked() -> False:
     is_valid, reason = rugcheck("7fc26zrkcpatx9e62qxjmw3hk1cm1jlqwukpyfp4vwl5") #CNPEPE
     assert is_valid == False
     assert reason == "Deployer is holding LP. Blacklisting:"
+
+# def test_rugcheck_insiders() -> False:
+#     is_valid, reason = rugcheck()
+#     assert is_valid == False
+#     assert "Insider holdings are too high" in reason 
