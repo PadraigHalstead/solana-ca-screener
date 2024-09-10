@@ -1,13 +1,10 @@
-import time
-import csv
-import os
-import sys
+import time,csv, os, sys
 from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import remove_address_from_potential, add_address_to_gems, blacklist, is_blacklisted, ensure_file_exists
-from config import allow_pumpfun, solscan_cookie, api_key, user_agent # Adding user agent to set on startup
+from config import allow_pumpfun, solscan_cookie, api_key, user_agent, solscan_cookie_valid # Adding user agent to set on startup
 from screening.pumpfuncheck import check_pumpfun
 from screening.rugcheck import rugcheck
 from screening.topholders import top_holders
