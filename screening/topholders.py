@@ -117,3 +117,4 @@ def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
             return False, "Error occured obtaining top holders. Blacklisting."
     else:
         return False, "Top holders data not found. Blacklisting."
+    
