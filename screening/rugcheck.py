@@ -6,11 +6,32 @@ import os
 from typing import Tuple, Optional
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import ua_platform, user_agent
+
 
 def call_rugcheck_api(ca):
     url = f"https://api.rugcheck.xyz/v1/tokens/{ca}/report"
     
-    response = requests.get(url)
+    headers = {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTg4NzczNTcsImlkIjoiR2NybmVkSGVZTkxMaGNmeTV2Mll0cUpVVEhIc2o2akFUeVpXTHk1cFVhOUUifQ.JuO9PvGviVtzNJRNaNZ98qI5GKuu6bUVdTXzS5KKHGM",
+        "Content-Type": "application/json",
+        "Origin": "https://rugcheck.xyz",
+        "Priority": "u=1, i",
+        "Referer": "https://rugcheck.xyz/",
+        "Sec-Ch-Ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": {ua_platform},
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "User-Agent": {user_agent},
+        "X-Wallet-Address": "null"
+    }
+
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 429:
