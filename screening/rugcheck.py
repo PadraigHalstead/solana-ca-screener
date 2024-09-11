@@ -23,11 +23,11 @@ def call_rugcheck_api(ca):
         "Referer": "https://rugcheck.xyz/",
         "Sec-Ch-Ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
         "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": {ua_platform},
+        "Sec-Ch-Ua-Platform": ua_platform,
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site",
-        "User-Agent": {user_agent},
+        "User-Agent": user_agent,
         "X-Wallet-Address": "null"
     }
 
@@ -76,7 +76,9 @@ def extract_data(rugcheck_response):
     markets = rugcheck_response.get("markets", [])
     for market in markets:
         lp_locked_pct = market.get('lp', {}).get('lpLockedPct', None)
-        if lp_locked_pct is not None and lp_locked_pct < 97:
+        if lp_locked_pct is not None and lp_locked_pct > 97:
+             return data, True, "Rugcheck Pass"
+        else:
             return data, False, "Deployer is holding LP. Blacklisting:"
 
     total_insider_pct = 0
