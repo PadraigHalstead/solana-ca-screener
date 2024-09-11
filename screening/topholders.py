@@ -14,7 +14,7 @@ from config import solscan_cookie, user_agent, ua_platform
 
 
 def call_solscan_api(ca):
-    url = f"https://api-v2.solscan.io/v2/token/holders?address={ca}&page_size=20&page=1"
+    url = f"https://api-v2.solscan.io/v2/token/holders?address={ca}&page_size=30&page=1"
     headers = {
         "Accept": "application/json, text/plain, */*",
         "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -64,63 +64,60 @@ def check_holder_percentage(token_supply, holders):
             return True
     return False
 
-def check_distribution(token_supply, holders):
+def check_distribution(token_supply, holders, tolerance=0.1):
 
     if len(holders) < 25:
         return False
     
-    selected_holders = holders[14:25]
-    total_pct = 0
+    selected_holders = holders[14:27]
+    percentages = [(holder['amount'] / token_supply) * 100 for holder in selected_holders]
+
+    max_pct = max(percentages)
+    min_pct = min(percentages)
     
-    for holder in selected_holders:
-        percentage = (holder['amount'] / token_supply) * 100
-        total_pct += percentage
-    
-    avg_pct = total_pct / len(selected_holders)
-    
-    if avg_pct < 0.1:
-        return False
-    return True
+    difference = max_pct - min_pct
+    return difference <= tolerance
+
 
 
 def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
-
-    if not os.path.exists('../top_holders.json'):
-        with open('../top_holders.json', 'w') as file:
+ 
+    if not os.path.exists('./top_holders.json'):
+        with open('./top_holders.json', 'w') as file:
             json.dump({}, file)
 
     extracted_data = read_json('./extracted_data.json')
 
     token = next((item for item in extracted_data if item["mint"] == base_token_address), None)
     if not token:
-        return False, "No extracted data found for this token. Blacklisting"
+        return False, "No extracted data found for this token. Blacklisting:"
 
     token_supply = token.get("token_supply")
     if not token_supply:
-        return False, "Token supply not found. Blacklisting."
+        return False, "Token supply not found. Blacklisting:"
 
     response_data = call_solscan_api(base_token_address)
     if response_data and response_data.get('data'):
         holders = response_data['data']
-
+        
         try:
             percentage_top_10 = calculate_percentage(token_supply, holders, 10)
             percentage_top_20 = calculate_percentage(token_supply, holders, 20)
             holder_exceeds_6_percent = check_holder_percentage(token_supply, holders)
-            distribution_check = check_distribution(token_supply, holders)
+            distribution_check = check_distribution(token_supply, holders, tolerance=0.01)
 
             if percentage_top_10 > 32:
-                return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting."
+                return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting:"
             elif percentage_top_20 > 40:
-                return False, f"Top 20 holder is {percentage_top_20}%. Blacklisting."
+                return False, f"Top 20 holder is {percentage_top_20}%. Blacklisting:"
             elif holder_exceeds_6_percent:
-                return False, "One or more holders with more than 6%. Blacklisting."
+                return False, "One or more holders with more than 6%. Blacklisting:"
             elif not distribution_check:
-                return False, "Suspicious distribution. Potential mass sell bot. Blacklisting.n"
+                return False, "Suspicious distribution. Potential mass sell bot. Blacklisting:"
             else:
                 replace_top_holders(base_token_address, holders)
                 return True, "Top Holders Pass"
         except Exception as e:
-            return False, "Error occured obtaining top holders. Blacklisting."
+            return False, "Error occured obtaining top holders. Blacklisting:"
     else:
-        return False, "Top holders data not found. Blacklisting."
+        return False, "Top holders data not found. Blacklisting:"
