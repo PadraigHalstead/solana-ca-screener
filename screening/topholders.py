@@ -76,7 +76,9 @@ def check_distribution(token_supply, holders, tolerance=0.1):
     min_pct = min(percentages)
     
     difference = max_pct - min_pct
-    return difference <= tolerance
+    if (difference <= tolerance):
+        return False
+    return True
 
 
 
