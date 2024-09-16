@@ -1,9 +1,5 @@
-import csv
-import os
-import json
-import logging
+import csv, sys, os, json, logging, winreg
 from playwright.async_api import async_playwright
-
 
 BLACKLIST_FILE = './lists/blacklist.csv'
 POTENTIAL_FILE = './lists/potential.csv'
@@ -143,10 +139,59 @@ def replace_top_holders(ca, holders):
     with open(top_holders_file, 'w') as file:
         json.dump(existing_data, file, indent=4)
 
+def get_default_browser_windows():
+    try:
+        reg_path = r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice"
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path) as key:
+            browser_prog_id = winreg.QueryValueEx(key, "ProgId")[0]
+        
+        if "Chrome" in browser_prog_id:
+            return "chrome"
+        elif "Firefox" in browser_prog_id:
+            return "firefox"
+        elif "Edge" in browser_prog_id:
+            return "msedge"
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching default browser: {e}")
+        return None
+    
+import subprocess
+
+def get_default_browser_linux():
+    try:
+        result = subprocess.run(['xdg-settings', 'get', 'default-web-browser'], stdout=subprocess.PIPE)
+        browser = result.stdout.decode().strip()
+        if "chrome" in browser:
+            return "chrome"
+        elif "firefox" in browser:
+            return "firefox"
+        else:
+            return None
+    except Exception as e:
+        print(f"Error fetching default browser: {e}")
+        return None
+
 
 async def get_user_agent():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, channel="chrome")
+        browser_name = None
+        if os.name == 'nt':
+            browser_name = get_default_browser_windows()
+        elif os.name == 'posix': 
+            browser_name = get_default_browser_linux()
+
+        if browser_name == "chrome":
+            browser = await p.chromium.launch(channel="chrome", headless=False)
+        elif browser_name == "firefox":
+            browser = await p.firefox.launch(headless=False)
+        elif browser_name == "msedge":
+            browser = await p.chromium.launch(channel="msedge", headless=False)
+        else:
+            print("Default browser not supported or detected")
+            sys.exit(1)
+
         page = await browser.new_page()
         await page.goto("https://www.google.com")
         user_agent = await page.evaluate("navigator.userAgent")
