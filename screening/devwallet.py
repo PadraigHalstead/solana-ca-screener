@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from pumpfundev import getpumpfundevwallet
 from config import solscan_cookie, ua_platform, user_agent
 
 def call_solscan_api(dev_address):
@@ -45,12 +44,6 @@ def devwallet(base_token_address: str) -> Tuple[bool, Optional[str]]:
 
         if not dev_address or token_supply is None:
             return False, "Required data missing in the extracted data. Blacklisting:"
-
-        # Pump.fun wallet address
-        if dev_address == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
-            dev_address = getpumpfundevwallet(base_token_address)
-            if dev_address == "":
-                return False, "Error getting dev address"
 
         response = call_solscan_api(dev_address)
 

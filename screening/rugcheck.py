@@ -7,7 +7,7 @@ from typing import Tuple, Optional
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import ua_platform, user_agent
-
+from pumpfundev import getpumpfundevwallet
 
 def call_rugcheck_api(ca):
     url = f"https://api.rugcheck.xyz/v1/tokens/{ca}/report"
@@ -44,22 +44,30 @@ def call_rugcheck_api(ca):
     else:
         return None
 
-def extract_data(rugcheck_response):
+def extract_data(rugcheck_response, base_token_address: str):
     mint_authority = rugcheck_response["token"].get("mintAuthority", None)
     freeze_authority = rugcheck_response["token"].get("freezeAuthority", None)
     token_meta = rugcheck_response.get("tokenMeta", {})
+
+    dev = token_meta.get("updateAuthority", False)
+    if dev == "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM":
+        dev_address = getpumpfundevwallet(base_token_address)
+        if dev_address == "":
+            return None, False, "Error getting dev address"
+        else:
+            dev = dev_address
+    print(dev)
 
     data = {
         "mint": rugcheck_response.get("mint", False),
         "mintAuthority": mint_authority,
         "freezeAuthority": freeze_authority,
-        "dev": token_meta.get("updateAuthority", False),
+        "dev": dev,
         "token_supply": rugcheck_response["token"].get("supply", False),
         "mutable": token_meta.get("mutable", False)
     }
 
-    if mint_authority is not None and  (mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' or mint_authority != '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'):
-        print(mint_authority)
+    if mint_authority is not None and (mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' or mint_authority != '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'):
         return data, False, "Mint Authority is enabled. Blacklisting:"
     elif freeze_authority is not None:
         return data, False, "Freeze Authority is enabled. Blacklisting:"
@@ -68,6 +76,8 @@ def extract_data(rugcheck_response):
     else:
         risks = rugcheck_response.get("risks", [])
         for risk in risks:
+            if risk.get("name") == "Low Liquidity" and risk.get("value") == "$0.00":
+                return data, False, "Liquidity pool rugged. Blacklisting:"
             if risk.get("name") == "Low Liquidity":
                 return data, False, "Token has very Low Liquidity. Blacklisting:"
             if risk.get("name") == "Copycat token":
@@ -98,7 +108,7 @@ def rugcheck(base_token_address: str) -> Tuple[bool, Optional[str]]:
     if rugcheck_response is None:
         return False, "No response from Rugcheck. Blacklisting:"
 
-    extracted_data, is_blacklisted, reason = extract_data(rugcheck_response)
+    extracted_data, is_blacklisted, reason = extract_data(rugcheck_response, base_token_address)
 
     try:
         with open('./extracted_data.json', 'w') as file:
