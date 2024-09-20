@@ -12,6 +12,7 @@ from screening.devwallet import devwallet
 from screening.numofholders import num_of_holders
 from screening.devsolbalance import dev_sol_balance
 from screening.airdrops import airdrops
+from screening.bundlesnipe import bundlesnipe
 
 
 def screen():
@@ -76,8 +77,14 @@ def screen():
                         continue
                     print(reason)
 
-
                     is_valid, reason = airdrops(base_token_address)
+                    if not is_valid:
+                        blacklist(base_token_address)
+                        print(f"{reason} {base_token_address}")
+                        continue
+                    print(reason)
+
+                    is_valid, reason = bundlesnipe(base_token_address)
                     if not is_valid:
                         blacklist(base_token_address)
                         print(f"{reason} {base_token_address}")
