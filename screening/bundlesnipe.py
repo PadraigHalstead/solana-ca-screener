@@ -1,16 +1,14 @@
-import requests
-import json
-import os
-import sys
-from dotenv import load_dotenv
+import requests, json, os, sys
 from typing import Tuple, Optional
+from dotenv import load_dotenv
 
 load_dotenv()
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import user_agent, ua_platform, solscan_cookie, excluded_addresses
 
+
 def get_transfer_data(base_token_address: str, dev_address: str) -> Optional[dict]:
-    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=50&exclude_amount_zero=false&to={dev_address}"
+    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=10&exclude_amount_zero=false&to={dev_address}"
 
     headers = {
         "accept": "application/json, text/plain, */*",
@@ -40,25 +38,20 @@ def get_transfer_data(base_token_address: str, dev_address: str) -> Optional[dic
 def get_token_supply_and_dev_address(base_token_address: str) -> Tuple[Optional[int], Optional[str]]:
     file_path = './extracted_data.json'
     if os.path.exists(file_path):
-        try:
-            with open(file_path, 'r') as file:
-                extracted_data = json.load(file)
-            token = next((item for item in extracted_data if item["mint"] == base_token_address), None)
-            if token:
-                token_supply = token.get("token_supply", 0)
-                dev_address = token.get("dev", None)
-                return token_supply, dev_address
-        except Exception as e:
-            print(f"Error reading extracted data: {e}")
+        with open(file_path, 'r') as file:
+            extracted_data = json.load(file)
+        
+        token = next((item for item in extracted_data if item["mint"] == base_token_address), None)
+        if token:
+            token_supply = token.get("token_supply", 0)
+            dev_address = token.get("dev", None)
+            return token_supply, dev_address
+    
     print(f"Token supply or dev address not found for {base_token_address}")
     return None, None
 
 
-def calculate_percentage(amount: int, token_supply: int) -> float:
-    return round((amount / token_supply) * 100, 1)
-
-
-def airdrops(base_token_address: str) -> Tuple[bool, str]:
+def bundlesnipe(base_token_address: str) -> Tuple[bool, str]:
 
     # Get token supply and dev address from extracted_data.json
     token_supply, dev_address = get_token_supply_and_dev_address(base_token_address)
@@ -75,19 +68,20 @@ def airdrops(base_token_address: str) -> Tuple[bool, str]:
 
     total_sniped_amount = 0
     for entry in transfer_data["data"]:
-        try:
-            if (
-                "transfer" in entry["activity_type"].lower() and
-                entry["to_address"] == dev_address and
-                entry["token_address"] == base_token_address
-            ):
-                total_sniped_amount += entry["amount"]
-        except KeyError:
-            print(f"Error processing entry {entry}")
+        if (
+            "transfer" in entry["activity_type"].lower() and
+            entry["from_address"] == dev_address and
+            entry["to_address"] not in excluded_addresses and
+            entry["token_address"] == base_token_address
+        ):
+            total_sniped_amount += entry["amount"]
 
     # Calculate sniped percentage
-    sniped_percentage = calculate_percentage(total_sniped_amount, token_supply)
+    sniped_percentage = (total_sniped_amount / token_supply) * 100
+    sniped_percentage = round(sniped_percentage, 1)
 
     if sniped_percentage > 0:
-        return False, f"Dev sniped amount: {sniped_percentage}%. Blacklisting:"
-    return True, "Dev Snipe Pass"
+        return False, f"Dev outgoing sniped amount: {sniped_percentage}%"
+    else:
+        return True, "Passed"
+

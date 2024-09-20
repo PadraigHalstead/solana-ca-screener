@@ -29,6 +29,9 @@ def check_solscan_valid(solscan_cookie):
 
 try:
     print('Configuring settings. Please wait...')
+
+    excluded_addresses = ['TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM', '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8']
+
     solscan_cookie = os.getenv('SOLSCAN_COOKIE')
     if not solscan_cookie:
         print("API key not found. Please add your SOLSCAN_COOKIE to the .env file")
