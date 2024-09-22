@@ -1,10 +1,13 @@
-import csv, sys, os, json, logging, winreg
+import csv, sys, os, json, logging
 from playwright.async_api import async_playwright
 
 BLACKLIST_FILE = './lists/blacklist.csv'
 POTENTIAL_FILE = './lists/potential.csv'
 GEMS_FILE = './lists/gems.csv'
 TOP_HOLDERS_FILE = './top_holders.json'
+
+if os.name == 'nt':
+    import winreg 
 
 def ensure_directory_exists(file_path):
     directory = os.path.dirname(file_path)
@@ -216,3 +219,9 @@ def ensure_file_exists(file_path):
             open(file_path, 'a').close()
     except Exception as e:
         logging.error(f"Error ensuring file exists: {file_path}, Error: {e}")
+
+def read_json(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    return {}

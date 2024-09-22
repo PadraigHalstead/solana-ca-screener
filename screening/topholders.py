@@ -1,54 +1,15 @@
-import requests
-import json
-import numpy as np
-import time
-import sys
-import os
+import json, numpy as np, sys, os
 from dotenv import load_dotenv
 from typing import Tuple, Optional
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import replace_top_holders
-from config import solscan_cookie, user_agent, ua_platform
-
-
-def call_solscan_api(ca):
-    url = f"https://api-v2.solscan.io/v2/token/holders?address={ca}&page_size=30&page=1"
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cookie": solscan_cookie, 
-        "Origin": "https://solscan.io",
-        "Referer": "https://solscan.io/",
-        "Sec-Ch-Ua": '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": ua_platform,
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-        "User-Agent": user_agent,
-        "Priority": "u=1, i"
-    }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-
-def read_json(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            return json.load(file)
-    return {}
+from utils import replace_top_holders, read_json
+from api_request import call_solscan_api
+from config import excluded_addresses
 
 def filter_wallets(holders):
-    excluded_wallets = [
-        "TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM",
-        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
-        "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1"
-    ]
-    return [holder for holder in holders if holder['owner'] not in excluded_wallets]
+    return [holder for holder in holders if holder['owner'] not in excluded_addresses]
 
 def calculate_percentage(token_supply, holders, top_n):
     filtered_holders = filter_wallets(holders)
@@ -98,7 +59,8 @@ def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
     if not token_supply:
         return False, "Token supply not found. Blacklisting:"
 
-    response_data = call_solscan_api(base_token_address)
+    url = f"https://api-v2.solscan.io/v2/token/holders?address={base_token_address}&page_size=30&page=1"
+    response_data = call_solscan_api(url)
     if response_data and response_data.get('data'):
         holders = response_data['data']
         

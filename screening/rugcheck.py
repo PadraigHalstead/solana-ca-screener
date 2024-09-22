@@ -1,50 +1,11 @@
-import requests
-import json
-import time
-import sys
-import os
+import json, sys, os
 from typing import Tuple, Optional
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config import ua_platform, user_agent
 from pumpfundev import getpumpfundevwallet
-
-def call_rugcheck_api(ca):
-    url = f"https://api.rugcheck.xyz/v1/tokens/{ca}/report"
-    
-    headers = {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTg4NzczNTcsImlkIjoiR2NybmVkSGVZTkxMaGNmeTV2Mll0cUpVVEhIc2o2akFUeVpXTHk1cFVhOUUifQ.JuO9PvGviVtzNJRNaNZ98qI5GKuu6bUVdTXzS5KKHGM",
-        "Content-Type": "application/json",
-        "Origin": "https://rugcheck.xyz",
-        "Priority": "u=1, i",
-        "Referer": "https://rugcheck.xyz/",
-        "Sec-Ch-Ua": '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": ua_platform,
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-site",
-        "User-Agent": user_agent,
-        "X-Wallet-Address": "null"
-    }
-
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 429:
-        print("Rate limit exceeded, waiting for 10 seconds...")
-        time.sleep(10)
-        return call_rugcheck_api(ca)
-    elif response.status_code == 502:
-        time.sleep(0.5)
-        return call_rugcheck_api(ca)
-    else:
-        return None
+from api_request import call_rugcheck_api
 
 def extract_data(rugcheck_response, base_token_address: str):
+
     mint_authority = rugcheck_response["token"].get("mintAuthority", None)
     freeze_authority = rugcheck_response["token"].get("freezeAuthority", None)
     token_meta = rugcheck_response.get("tokenMeta", {})
@@ -56,7 +17,6 @@ def extract_data(rugcheck_response, base_token_address: str):
             return None, False, "Error getting dev address"
         else:
             dev = dev_address
-    print(dev)
 
     data = {
         "mint": rugcheck_response.get("mint", False),
@@ -66,6 +26,9 @@ def extract_data(rugcheck_response, base_token_address: str):
         "token_supply": rugcheck_response["token"].get("supply", False),
         "mutable": token_meta.get("mutable", False)
     }
+    markets = rugcheck_response.get("markets", [])
+    top_holders = rugcheck_response.get("topHolders", [])
+
 
     if mint_authority is not None and (mint_authority != '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1' or mint_authority != '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'):
         return data, False, "Mint Authority is enabled. Blacklisting:"
@@ -83,7 +46,6 @@ def extract_data(rugcheck_response, base_token_address: str):
             if risk.get("name") == "Copycat token":
                 return data, False, "Token is copying a verifed token symbol. Blacklisting:"
     
-    markets = rugcheck_response.get("markets", [])
     for market in markets:
         lp_locked_pct = market.get('lp', {}).get('lpLockedPct', None)
         if lp_locked_pct is not None and lp_locked_pct > 97:
@@ -92,7 +54,6 @@ def extract_data(rugcheck_response, base_token_address: str):
             return data, False, "Deployer is holding LP. Blacklisting:"
 
     total_insider_pct = 0
-    top_holders = rugcheck_response.get("topHolders", [])
     for holder in top_holders:
         if holder.get("insider", False):
             total_insider_pct += holder.get("pct", 0)
