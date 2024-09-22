@@ -4,6 +4,7 @@ from typing import Tuple, Optional
 load_dotenv()
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from api_request import call_solscan_api
+from config import excluded_addresses
 
 
 def get_token_supply_and_dev_address(base_token_address: str) -> Tuple[Optional[int], Optional[str]]:
@@ -29,7 +30,6 @@ def calculate_percentage(amount: int, token_supply: int) -> float:
 
 def airdrops(base_token_address: str) -> Tuple[bool, str]:
 
-    # Get token supply and dev address from extracted_data.json
     token_supply, dev_address = get_token_supply_and_dev_address(base_token_address)
     if not dev_address:
         return False, "Dev address not found"
@@ -37,26 +37,30 @@ def airdrops(base_token_address: str) -> Tuple[bool, str]:
     if not token_supply:
         return False, "Token supply not found"
 
-    # Get transfer data
-    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=50&exclude_amount_zero=false&to={dev_address}"
+    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=100&exclude_amount_zero=false&from={dev_address}"
     transfer_data = call_solscan_api(url)
+    print(transfer_data)
     if not transfer_data or "data" not in transfer_data:
         return True, "No transfers found"
 
-    total_sniped_amount = 0
+    total_airdropped_amount = 0
     for entry in transfer_data["data"]:
         try:
             if (
-                "transfer" in entry["activity_type"].lower() and
-                entry["to_address"] == dev_address and
+                "activity_spl_transfer" in entry["activity_type"].lower() and
+                entry["from_address"] == dev_address and
+                entry["to_address"] not in excluded_addresses and
                 entry["token_address"] == base_token_address
             ):
-                total_sniped_amount += entry["amount"]
+                total_airdropped_amount += entry["amount"]
         except KeyError:
             print(f"Error processing entry {entry}")
 
-    sniped_percentage = calculate_percentage(total_sniped_amount, token_supply)
+    airdropped_percentage = calculate_percentage(total_airdropped_amount, token_supply)
 
-    if sniped_percentage > 0:
-        return False, f"Dev sniped amount: {sniped_percentage}%. Blacklisting:"
+    if airdropped_percentage > 100:
+        airdropped_percentage = 100
+
+    if airdropped_percentage > 0:
+        return False, f"Dev airdropped: {airdropped_percentage}%. Blacklisting:"
     return True, "Dev Snipe Pass"

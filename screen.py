@@ -34,48 +34,48 @@ def screen():
                     if is_blacklisted(base_token_address):
                         continue
                     
-                    if not allow_pumpfun:
-                        is_valid, reason = check_pumpfun(base_token_address)
-                        if not is_valid:
-                            blacklist(base_token_address)
-                            print(f"{reason} {base_token_address}")
-                            continue    
-                        print(reason)              
+                    # if not allow_pumpfun:
+                    #     is_valid, reason = check_pumpfun(base_token_address)
+                    #     if not is_valid:
+                    #         blacklist(base_token_address)
+                    #         print(f"{reason} {base_token_address}")
+                    #         continue    
+                    #     print(reason)              
 
                     is_valid, reason = rugcheck(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)              
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)              
 
-                    is_valid, reason = top_holders(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)  
+                    # is_valid, reason = top_holders(base_token_address)
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)  
 
-                    is_valid, reason = devwallet(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)
+                    # is_valid, reason = devwallet(base_token_address)
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)
 
-                    is_valid, reason = num_of_holders(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)             
+                    # is_valid, reason = num_of_holders(base_token_address)
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)             
 
-                    is_valid, reason = dev_sol_balance(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)
+                    # is_valid, reason = dev_sol_balance(base_token_address)
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)
 
                     is_valid, reason = airdrops(base_token_address)
                     if not is_valid:
@@ -84,12 +84,12 @@ def screen():
                         continue
                     print(reason)
 
-                    is_valid, reason = bundlesnipe(base_token_address)
-                    if not is_valid:
-                        blacklist(base_token_address)
-                        print(f"{reason} {base_token_address}")
-                        continue
-                    print(reason)
+                    # is_valid, reason = bundlesnipe(base_token_address)
+                    # if not is_valid:
+                    #     blacklist(base_token_address)
+                    #     print(f"{reason} {base_token_address}")
+                    #     continue
+                    # print(reason)
 
                     remove_address_from_potential(base_token_address)
                     add_address_to_gems(base_token_address)

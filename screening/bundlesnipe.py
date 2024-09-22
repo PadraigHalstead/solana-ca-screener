@@ -25,16 +25,14 @@ def get_token_supply_and_dev_address(base_token_address: str) -> Tuple[Optional[
 
 def bundlesnipe(base_token_address: str) -> Tuple[bool, str]:
 
-    # Get token supply and dev address from extracted_data.json
     token_supply, dev_address = get_token_supply_and_dev_address(base_token_address)
     if not dev_address:
         return False, "Dev address not found"
     
     if not token_supply:
         return False, "Token supply not found"
-
-    # Get transfer data
-    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=10&exclude_amount_zero=false&to={dev_address}"
+    
+    url = f"https://api-v2.solscan.io/v2/token/transfer?address={base_token_address}&page=1&page_size=100&exclude_amount_zero=false&to={dev_address}"
     transfer_data = call_solscan_api(url)
     if not transfer_data or "data" not in transfer_data:
         return True, "No transfers found"
@@ -43,8 +41,8 @@ def bundlesnipe(base_token_address: str) -> Tuple[bool, str]:
     for entry in transfer_data["data"]:
         if (
             "transfer" in entry["activity_type"].lower() and
-            entry["from_address"] == dev_address and
-            entry["to_address"] not in excluded_addresses and
+            entry["from_address"] not in excluded_addresses and
+            entry["to_address"] == dev_address and
             entry["token_address"] == base_token_address
         ):
             total_sniped_amount += entry["amount"]
@@ -52,8 +50,10 @@ def bundlesnipe(base_token_address: str) -> Tuple[bool, str]:
     sniped_percentage = (total_sniped_amount / token_supply) * 100
     sniped_percentage = round(sniped_percentage, 1)
 
-    if sniped_percentage > 0:
-        return False, f"Dev outgoing sniped amount: {sniped_percentage}%"
+    if sniped_percentage > 100:
+        sniped_percentage = 100
+
+    if sniped_percentage > 10:
+        return False, f"Dev sniped {sniped_percentage}%. Blacklisting: "
     else:
         return True, "Passed"
-

@@ -1,7 +1,6 @@
 import requests
 from dotenv import load_dotenv
 load_dotenv()
-
 from config import solscan_cookie, ua_platform, user_agent, api_key
 
 def getpumpfundevwallet(base_token_address: str) -> str:
