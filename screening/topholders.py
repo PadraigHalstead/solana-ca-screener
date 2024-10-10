@@ -70,6 +70,8 @@ def top_holders(base_token_address: str) -> Tuple[bool, Optional[str]]:
             holder_exceeds_6_percent = check_holder_percentage(token_supply, holders)
             distribution_check = check_distribution(token_supply, holders, tolerance=0.01)
 
+            if percentage_top_10 < 8:
+                return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting:"
             if percentage_top_10 > 32:
                 return False, f"Top 10 holder is {percentage_top_10}%. Blacklisting:"
             elif percentage_top_20 > 40:
